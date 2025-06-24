@@ -24,3 +24,5 @@ CLOCK_CHANNEL = int(os.getenv("TEST_3"))
 #     int(os.getenv("F2F_TA_012_GENNA")),
 #     int(os.getenv("F2F_TA_013_IVY"))
 # ]
+
+# CLOCK_CHANNEL = int(os.getenv("CLOCK_CHANNEL"))
