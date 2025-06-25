@@ -87,7 +87,8 @@ async def on_message(message):
                 username=username,
                 hours=hours,
                 minutes=minutes,
-                seconds=seconds
+                seconds=seconds,
+                channel_id=CLOCK_CHANNEL
             )
 
     if channel_id in SALES_CHANNELS:

@@ -50,6 +50,7 @@ class Database:
         CREATE TABLE IF NOT EXISTS clocked_times (
             id SERIAL PRIMARY KEY,
             username TEXT NOT NULL,
+            channel_id BIGINT NOT NULL,
             duration TIME NOT NULL
         );
         """
@@ -67,11 +68,11 @@ class Database:
         params = (username, channel_id, price, date, time_only)
         self.execute_write_query(query, params)
 
-    def insert_clocked_time(self, username: str, hours: int, minutes: int, seconds: int):
+    def insert_clocked_time(self, username: str, hours: int, minutes: int, seconds: int, channel_id: int):
         query = """
-            INSERT INTO clocked_times (username, duration)
-            VALUES (%s, %s)
+            INSERT INTO clocked_times (username, channel_id, duration)
+            VALUES (%s, %s, %s)
         """
         duration = time(hour=hours, minute=minutes, second=seconds)
-        params = (username, duration)
+        params = (username, channel_id, duration)
         self.execute_write_query(query, params)
