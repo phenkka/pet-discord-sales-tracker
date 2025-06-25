@@ -11,11 +11,15 @@ load_dotenv()
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-SALES_CHANNELS = [
-    int(os.getenv("TEST_1")),
-    int(os.getenv("TEST_2"))
-]
-CLOCK_CHANNEL = int(os.getenv("TEST_3"))
+
+group_vars = ["GROUP_09", "GROUP_010"] # "GROUP_011", "GROUP_012", "GROUP_013"
+SALES_CHANNELS = []
+for var in group_vars:
+    value = os.getenv(var)
+    if value:
+        SALES_CHANNELS.extend(map(int, value.split(",")))
+
+CLOCK_CHANNEL = int(os.getenv("CLOCK_CHAT"))
 
 
 # SALES_CHANNELS = [
@@ -38,8 +42,6 @@ POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
-
-
 
 
 intents = Intents.default()
@@ -88,7 +90,8 @@ async def on_message(message):
                 hours=hours,
                 minutes=minutes,
                 seconds=seconds,
-                channel_id=CLOCK_CHANNEL
+                channel_id=CLOCK_CHANNEL,
+                timestamp=message.created_at
             )
 
     if channel_id in SALES_CHANNELS:
