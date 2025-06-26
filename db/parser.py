@@ -73,13 +73,14 @@ async def on_message(message):
         return
 
     if channel_id == CLOCK_CHANNEL:
+        user = message.mentions[0]
+        username = user.display_name
         match = re.search(
             r"@(\w+).*?adding (\d+) hours, (\d+) minutes, (\d+) seconds",
             message.content
         )
 
         if match:
-            username = match.group(1)
             hours = int(match.group(2))
             minutes = int(match.group(3))
             seconds = int(match.group(4))
@@ -101,7 +102,7 @@ async def on_message(message):
         if price:
             print(f"Продажа: {message.author} | {message.created_at} | {price}")
             db.insert_sale(
-                username=str(message.author),
+                username=str(message.author.display_name),
                 channel_id=channel_id,
                 price=price,
                 timestamp=message.created_at

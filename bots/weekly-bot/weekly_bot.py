@@ -44,7 +44,7 @@ CLOCK = int(os.getenv("CLOCK_CHAT"))
 
 
 @tasks.loop(minutes=2)
-async def send_test_report():
+async def send_weekly_report():
     today = date.today()
     last_monday = today - timedelta(days=today.weekday() + 7)
     last_sunday = last_monday + timedelta(days=6)
@@ -113,11 +113,74 @@ async def send_test_report():
             print(f"⚠️ Channel ID {update_channel_id} not found.")
 
 
+@tasks.loop(minutes=2)  # Для теста, потом можно minutes=1440 для запуска раз в сутки
+async def send_daily_report():
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+
+    start_date = yesterday
+    end_date = yesterday
+
+    for group_id, channel_ids in GROUPS.items():
+        update_channel_id = UPDATE_CHATS.get(group_id)
+        if not update_channel_id:
+            print(f"❌ No UPDATE_CHAT for group {group_id}")
+            continue
+
+        msg = f"💸 **DAILY SALES LEADERBOARD (Group {group_id})**\n"
+        msg += f"**Date: **{start_date.strftime('%d %b %Y')}\n\n"
+
+        all_sales = []
+        for channel_id in channel_ids:
+            sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
+
+            if not sales or not sales['sales_by_user']:
+                continue
+            all_sales.extend(sales['sales_by_user'])
+
+        if not all_sales:
+            msg += "No sales data found.\n"
+        else:
+            user_totals = defaultdict(int)
+            for username, amount in all_sales:
+                user_totals[username] += amount
+
+            sales_per_day = 0
+            top_chatter = ["", 0]
+            works = db.get_clocked_time_by_channel_and_date(CLOCK, start_date, end_date)
+            for username, total_sales in sorted(user_totals.items(), key=lambda x: x[1], reverse=True):
+                for worker in works:
+                    if worker[0] != username:
+                        continue
+                    hours = worker[1].total_seconds() / 3600
+                    avg = total_sales / hours if hours else 0
+                    sales_per_day += total_sales
+                    if top_chatter[1] < total_sales:
+                        top_chatter[0] = username
+                        top_chatter[1] = total_sales
+
+                    msg += f"**@{username}**\n"
+                    msg += f"**Sales: **{total_sales} EUR.\n"
+                    msg += f"**Worked hours: **{hours:.2f} hours.\n"
+                    msg += f"**Average Earnings per hour: **{avg:.2f} EUR/hour.\n\n"
+
+            msg += f"--------------------------------------------------------------\n\n"
+            msg += f"🚀 **Top Performing Chatter: **{top_chatter[0]}.\n"
+            msg += f"💸 **Total Team Sales: **{sales_per_day} EUR.\n\n"
+            msg += f"--------------------------------------------------------------"
+
+        channel = bot.get_channel(update_channel_id)
+        if channel:
+            await channel.send(msg)
+        else:
+            print(f"⚠️ Channel ID {update_channel_id} not found.")
+
 
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
-    send_test_report.start()  # запускаем таймер
+    send_weekly_report.start()
+    send_daily_report.start()
 
 
 if __name__ == "__main__":
