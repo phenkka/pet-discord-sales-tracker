@@ -29,6 +29,18 @@ services:
     networks:
       - my_network
 
+  leaderboard-bot:
+    build:
+      context: ./bots/leaderboard-bot
+    container_name: leaderboard-bot
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - my_network
+
 
   pgadmin:
     image: dpage/pgadmin4
@@ -71,14 +83,7 @@ services:
 #    depends_on:
 #      - db
 #
-#  leaderboard_bot:
-#    build:
-#      context: ./bots/leaderboard_bot
-#    container_name: leaderboard-bot
-#    env_file:
-#      - .env
-#    depends_on:
-#      - db
+
 
 volumes:
   pgadmin_data:

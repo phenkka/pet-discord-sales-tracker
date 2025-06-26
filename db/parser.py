@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-TOKEN = os.getenv("DISCORD_TOKEN")
+TOKEN = os.getenv("REPORT_TOKEN")
 
 group_vars = ["GROUP_09", "GROUP_010"] # "GROUP_011", "GROUP_012", "GROUP_013"
 SALES_CHANNELS = []
