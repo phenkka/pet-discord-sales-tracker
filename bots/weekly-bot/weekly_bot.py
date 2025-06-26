@@ -81,6 +81,8 @@ async def send_test_report():
                 top_sales_day = sales['top_sales_day'][0]
                 top_sales_amount = sales['top_sales_day'][1]
 
+            sales_per_month = 0
+            top_chatter = ["", 0]
             works = db.get_clocked_time_by_channel_and_date(CLOCK, start_date, end_date)
             for username, total_sales in sorted(user_totals.items(), key=lambda x: x[1], reverse=True):
                 for worker in works:
@@ -88,12 +90,21 @@ async def send_test_report():
                         continue
                     hours = worker[1].total_seconds() / 3600
                     avg = total_sales / hours if hours else 0
+                    sales_per_month += total_sales
+                    if top_chatter[1] < total_sales:
+                        top_chatter[0] = username
+                        top_chatter[1] = total_sales
 
                     msg += f"**@{username}**\n"
                     msg += f"**Sales: **{total_sales} EUR.\n"
                     msg += f"**Worked hours: **{hours:.2f} hours.\n"
                     msg += f"**Average Earnings per hour: **{avg:.2f} EUR/hour.\n"
                     msg += f"**Best performing day: **{top_sales_day}\n\n"
+
+            msg += f"--------------------------------------------------------------\n\n"
+            msg += f"🚀 **Top Performing Chatter: **{top_chatter[0]}.\n"
+            msg += f"💸 **Total Team Sales: **{sales_per_month} EUR.\n\n"
+            msg += f"--------------------------------------------------------------"
 
         channel = bot.get_channel(update_channel_id)
         if channel:
