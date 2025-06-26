@@ -64,7 +64,7 @@ async def send_weekly_report():
         all_sales = []
         for channel_id in channel_ids:
             sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
-
+            msg += f"{sales}\n"
             if not sales or not sales['sales_by_user']:
                 continue
             all_sales.extend(sales['sales_by_user'])
