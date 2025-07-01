@@ -23,6 +23,7 @@ services:
     container_name: weekly-bot
     env_file:
       - .env
+    restart: "no"
     depends_on:
       db:
         condition: service_healthy
@@ -35,12 +36,25 @@ services:
     container_name: leaderboard-bot
     env_file:
       - .env
+    restart: "no"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - my_network
 
+  bonus-bot:
+    build:
+      context: ./bots/bonus-bot
+    container_name: bonus-bot
+    env_file:
+      - .env
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - my_network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -73,17 +87,21 @@ services:
       timeout: 5s
       retries: 5
 
-#
-#  bonus_bot:
-#    build:
-#      context: ./bots/bonus_bot
-#    container_name: bonus-bot
-#    env_file:
-#      - .env
-#    depends_on:
-#      - db
-#
-
+  admin-panel:
+    build:
+      context: .
+      dockerfile: admin_panel.Dockerfile
+    container_name: admin-panel
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./admin_panel.py:/app/admin_panel.py
+      - ./templates:/app/templates
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - leaderboard-bot
+      - weekly-bot
+      - bonus-bot
 
 volumes:
   pgadmin_data:
