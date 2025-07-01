@@ -29,16 +29,8 @@ db = Database(
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-GROUPS = defaultdict(list)
-UPDATE_CHATS = {}
-
-for key, value in os.environ.items():
-    if key.startswith("GROUP_"):
-        group_id = key.split("_")[1]
-        GROUPS[group_id] = [int(x) for x in value.split(",")]
-    elif key.startswith("UPDATE_CHAT_"):
-        group_id = key.split("_")[2]
-        UPDATE_CHATS[group_id] = int(value)
+GROUPS = db.get_group_channels()
+UPDATE_CHATS = db.get_update_channels()
 
 LEADERBOARD_CHAT = int(os.getenv("LEADERBOARD_CHAT"))
 

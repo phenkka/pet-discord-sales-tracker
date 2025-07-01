@@ -29,16 +29,8 @@ db = Database(
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-GROUPS = defaultdict(list)
-UPDATE_CHATS = {}
-
-for key, value in os.environ.items():
-    if key.startswith("GROUP_"):
-        group_id = key.split("_")[1]
-        GROUPS[group_id] = [int(x) for x in value.split(",")]
-    elif key.startswith("UPDATE_CHAT_"):
-        group_id = key.split("_")[2]
-        UPDATE_CHATS[group_id] = int(value)
+GROUPS = db.get_group_channels()
+UPDATE_CHATS = db.get_update_channels()
 
 CLOCK = int(os.getenv("CLOCK_CHAT"))
 
@@ -78,8 +70,8 @@ async def send_weekly_report():
 
             for channel_id in channel_ids:
                 sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
-                top_sales_day = sales['top_sales_day'][0]
-                top_sales_amount = sales['top_sales_day'][1]
+                # top_sales_day = sales['top_sales_day'][0]
+                # top_sales_amount = sales['top_sales_day'][1]
 
             sales_per_month = 0
             top_chatter = ["", 0]
@@ -99,7 +91,7 @@ async def send_weekly_report():
                     msg += f"**Sales: **{total_sales} EUR.\n"
                     msg += f"**Worked hours: **{hours:.2f} hours.\n"
                     msg += f"**Average Earnings per hour: **{avg:.2f} EUR/hour.\n"
-                    msg += f"**Best performing day: **{top_sales_day}\n\n"
+                    # msg += f"**Best performing day: **{top_sales_day}\n\n"
 
             msg += f"--------------------------------------------------------------\n\n"
             msg += f"🚀 **Top Performing Chatter: **{top_chatter[0]}.\n"

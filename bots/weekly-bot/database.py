@@ -1,5 +1,6 @@
 from datetime import datetime
 from psycopg2 import pool
+from collections import defaultdict
 
 
 class Database:
@@ -86,3 +87,27 @@ class Database:
         """
         params = (channel_id, start_date, end_date)
         return self.execute_read_many_query(query, params)
+
+    def get_group_channels(self):
+        query = """
+            SELECT group_number, channel_id
+            FROM channel_owners
+        """
+        result = self.execute_read_many_query(query)
+        groups = defaultdict(list)
+        if result:
+            for group_number, channel_id in result:
+                groups[str(group_number)].append(channel_id)
+        return groups
+
+    def get_update_channels(self):
+        query = """
+            SELECT DISTINCT group_number, update_chat_id
+            FROM channel_owners
+        """
+        result = self.execute_read_many_query(query)
+        updates = {}
+        if result:
+            for group_number, update_chat_id in result:
+                updates[str(group_number)] = update_chat_id
+        return updates
