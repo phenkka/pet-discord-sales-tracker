@@ -94,6 +94,8 @@ services:
     container_name: admin-panel
     ports:
       - "5000:5000"
+    env_file:
+      - .env
     volumes:
       - ./admin-panel:/app
 #      - ./templates:/app/templates
@@ -102,6 +104,8 @@ services:
       - leaderboard-bot
       - weekly-bot
       - bonus-bot
+    networks:
+      - my_network
 
 volumes:
   pgadmin_data:

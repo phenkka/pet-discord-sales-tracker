@@ -1,6 +1,31 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, Response
 import docker
+import os
+
+from flask import Flask, render_template, redirect, url_for, request, flash, Response
+
 from docker import errors
+from database import Database
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
+def get_db():
+    return Database(
+        minconn=1,
+        maxconn=5,
+        dbname=os.getenv('POSTGRES_DB'),
+        user=os.getenv('POSTGRES_USER'),
+        password=os.getenv('POSTGRES_PASSWORD'),
+        host=os.getenv('POSTGRES_HOST'),
+        port=os.getenv('POSTGRES_PORT')
+    )
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey' 
@@ -75,6 +100,41 @@ def view_logs(bot_name):
     except Exception as e:
         log_content = f'Ошибка: {e}'
     return render_template('logs.html', bot_name=bot_name, log_content=log_content)
+
+@app.route('/owners', methods=['GET', 'POST'])
+def owners():
+    db = get_db()
+    if request.method == 'POST':
+        if 'add' in request.form:
+            try:
+                channel_id = int(request.form['channel_id'])
+                username = request.form['username']
+                update_chat_id = int(request.form['update_chat_id'])
+                group_number = int(request.form['group_number'])
+                db.add_channel_owner(channel_id, username, update_chat_id, group_number)
+                flash('Запись успешно добавлена!', 'success')
+            except Exception as e:
+                flash(f'Ошибка добавления: {e}', 'danger')
+        elif 'delete' in request.form:
+            try:
+                channel_id = int(request.form['delete'])
+                db.delete_channel_owner(channel_id)
+                flash('Запись успешно удалена!', 'success')
+            except Exception as e:
+                flash(f'Ошибка удаления: {e}', 'danger')
+        return redirect(url_for('owners'))
+    # Получаем все строки и имена столбцов
+    rows = db.execute_read_many_query('SELECT * FROM channel_owners')
+    columns = []
+    if rows:
+        conn = db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT * FROM channel_owners LIMIT 1')
+                columns = [desc[0] for desc in cursor.description]
+        finally:
+            db.release_connection(conn)
+    return render_template('owners.html', rows=rows, columns=columns)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

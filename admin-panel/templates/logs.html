@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Логи {{ bot_name }}</title>
+</head>
+<body>
+    <h1>Логи бота: {{ bot_name }}</h1>
+    <pre style="background:#222;color:#eee;padding:1em;max-width:900px;overflow-x:auto;">
+{{ log_content }}
+    </pre>
+    <a href="{{ url_for('index') }}">Назад к панели</a>
+</body>
+</html> 

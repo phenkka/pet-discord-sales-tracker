@@ -5,6 +5,7 @@
 </head>
 <body>
     <h1>Bot Admin Panel</h1>
+    <a href="{{ url_for('owners') }}" style="font-size:1.1em;">Владельцы каналов</a>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul>
