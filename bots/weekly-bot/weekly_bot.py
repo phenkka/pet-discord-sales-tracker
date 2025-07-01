@@ -1,5 +1,6 @@
 import os
 import discord
+import logging
 
 from collections import defaultdict
 from discord.ext import commands, tasks
@@ -15,6 +16,16 @@ POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 db = Database(
     minconn=1,
@@ -43,11 +54,12 @@ async def send_weekly_report():
 
     start_date = last_monday
     end_date = last_sunday
+    logger.info(f"WEEKLY: Start of report: {start_date}; End of report: {end_date}.")
 
     for group_id, channel_ids in GROUPS.items():
         update_channel_id = UPDATE_CHATS.get(group_id)
         if not update_channel_id:
-            print(f"❌ No UPDATE_CHAT for group {group_id}")
+            logger.error(f"WEEKLY: No UPDATE_CHAT for group {group_id}.")
             continue
 
         msg = f"💸 **WEEKLY SALES LEADERBOARD (Group {group_id})**\n"
@@ -56,12 +68,13 @@ async def send_weekly_report():
         all_sales = []
         for channel_id in channel_ids:
             sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
-            msg += f"{sales}\n"
             if not sales or not sales['sales_by_user']:
+                logger.error(f"WEEKLY: Sales is empty for {group_id} group.")
                 continue
             all_sales.extend(sales['sales_by_user'])
 
         if not all_sales:
+            logger.info(f"WEEKLY: There's no sales data for {group_id} group.")
             msg += "No sales data found.\n"
         else:
             user_totals = defaultdict(int)
@@ -79,6 +92,7 @@ async def send_weekly_report():
             for username, total_sales in sorted(user_totals.items(), key=lambda x: x[1], reverse=True):
                 for worker in works:
                     if worker[0] != username:
+                        logger.error(f"WEEKLY: The information is incorrect on the seller for {group_id} group.")
                         continue
                     hours = worker[1].total_seconds() / 3600
                     avg = total_sales / hours if hours else 0
@@ -100,9 +114,10 @@ async def send_weekly_report():
 
         channel = bot.get_channel(update_channel_id)
         if channel:
+            logger.info(f"WEEKLY: A message has been sent to the {group_id} group.")
             await channel.send(msg)
         else:
-            print(f"⚠️ Channel ID {update_channel_id} not found.")
+            logger.error(f"WEEKLY: Channel ID {update_channel_id} not found for {group_id} group.")
 
 
 @tasks.loop(minutes=2)  # Для теста, потом можно minutes=1440 для запуска раз в сутки
@@ -112,11 +127,12 @@ async def send_daily_report():
 
     start_date = yesterday
     end_date = yesterday
+    logger.info(f"DAILY: Start of report: {start_date}; End of report: {end_date}.")
 
     for group_id, channel_ids in GROUPS.items():
         update_channel_id = UPDATE_CHATS.get(group_id)
         if not update_channel_id:
-            print(f"❌ No UPDATE_CHAT for group {group_id}")
+            logger.error(f"No UPDATE_CHAT for group {group_id}.")
             continue
 
         msg = f"💸 **DAILY SALES LEADERBOARD (Group {group_id})**\n"
@@ -125,12 +141,13 @@ async def send_daily_report():
         all_sales = []
         for channel_id in channel_ids:
             sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
-
             if not sales or not sales['sales_by_user']:
+                logger.error(f"DAILY: Sales is empty for {group_id} group.")
                 continue
             all_sales.extend(sales['sales_by_user'])
 
         if not all_sales:
+            logger.info(f"DAILY: There's no sales data for {group_id} group.")
             msg += "No sales data found.\n"
         else:
             user_totals = defaultdict(int)
@@ -143,6 +160,7 @@ async def send_daily_report():
             for username, total_sales in sorted(user_totals.items(), key=lambda x: x[1], reverse=True):
                 for worker in works:
                     if worker[0] != username:
+                        logger.error(f"DAILY: The information is incorrect on the seller for {group_id} group.")
                         continue
                     hours = worker[1].total_seconds() / 3600
                     avg = total_sales / hours if hours else 0
@@ -163,14 +181,15 @@ async def send_daily_report():
 
         channel = bot.get_channel(update_channel_id)
         if channel:
+            logger.info(f"DAILY: A message has been sent to the {group_id} group.")
             await channel.send(msg)
         else:
-            print(f"⚠️ Channel ID {update_channel_id} not found.")
+            logger.error(f"DAILY: Channel ID {update_channel_id} not found for {group_id} group.")
 
 
 @bot.event
 async def on_ready():
-    print(f"✅ Logged in as {bot.user}")
+    logger.info(f"Logged in as {bot.user}.")
     send_weekly_report.start()
     send_daily_report.start()
 

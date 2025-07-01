@@ -89,14 +89,14 @@ services:
 
   admin-panel:
     build:
-      context: .
-      dockerfile: admin_panel.Dockerfile
+      context: ./admin-panel
+      dockerfile: Dockerfile
     container_name: admin-panel
     ports:
       - "5000:5000"
     volumes:
-      - ./admin_panel.py:/app/admin_panel.py
-      - ./templates:/app/templates
+      - ./admin-panel:/app
+#      - ./templates:/app/templates
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - leaderboard-bot

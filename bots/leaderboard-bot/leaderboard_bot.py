@@ -1,5 +1,6 @@
 import os
 import discord
+import logging
 
 from collections import defaultdict
 from discord.ext import commands, tasks
@@ -15,6 +16,16 @@ POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 db = Database(
     minconn=1,
@@ -43,6 +54,7 @@ async def send_team_leaderboard():
 
     start_date = last_monday
     end_date = last_sunday
+    logger.info(f"Start of report: {start_date}; End of report: {end_date}.")
 
     leaderboard = []
 
@@ -51,6 +63,7 @@ async def send_team_leaderboard():
         for channel_id in channel_ids:
             sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
             if not sales or not sales['sales_by_user']:
+                logger.error(f"Sales is empty for {group_id} group.")
                 continue
             for _, amount in sales['sales_by_user']:
                 group_total += amount
@@ -72,17 +85,19 @@ async def send_team_leaderboard():
             msg += f"**TEAM TA-{group_id}**\n"
             msg += f"**Total Sales: {total_sales} EUR**\n\n"
     else:
+        logger.info(f"There's no sales data for {group_id} group.")
         msg += "No sales data found.\n"
 
     channel = bot.get_channel(LEADERBOARD_CHAT)
     if channel:
+        logger.info(f"A message has been sent to the {group_id} group.")
         await channel.send(msg)
     else:
-        print(f"⚠️ Channel ID {LEADERBOARD_CHAT} not found.")
+        logger.error(f"Channel ID {LEADERBOARD_CHAT} not found for {group_id} group.")
 
 @bot.event
 async def on_ready():
-    print(f"✅ Logged in as {bot.user}")
+    logger.info(f"Logged in as {bot.user}.")
     send_team_leaderboard.start()
 
 

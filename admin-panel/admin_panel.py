@@ -1,9 +1,9 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, Response
 import docker
 from docker import errors
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # Для flash-сообщений
+app.secret_key = 'supersecretkey' 
 client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 
 BOTS = [
@@ -41,14 +41,12 @@ def start_bot(bot_name):
         # Запускаем контейнер
         container.start()
         
-        # Определяем команду для каждого бота
         bot_commands = {
             'bonus-bot': 'python bonus_bot.py',
             'leaderboard-bot': 'python leaderboard_bot.py', 
             'weekly-bot': 'python weekly_bot.py'
         }
         
-        # Запускаем бота внутри контейнера
         if bot_name in bot_commands:
             container.exec_run(bot_commands[bot_name], detach=True)
         
@@ -66,6 +64,17 @@ def stop_bot(bot_name):
     except Exception as e:
         flash(f'Ошибка остановки {bot_name}: {e}', 'danger')
     return redirect(url_for('index'))
+
+@app.route('/logs/<bot_name>')
+def view_logs(bot_name):
+    try:
+        container = client.containers.get(bot_name)
+        # Читаем последние 100 строк файла bot.log внутри контейнера
+        exec_result = container.exec_run('tail -n 100 bot.log')
+        log_content = exec_result.output.decode('utf-8') if exec_result.exit_code == 0 else 'Логи не найдены или ошибка доступа.'
+    except Exception as e:
+        log_content = f'Ошибка: {e}'
+    return render_template('logs.html', bot_name=bot_name, log_content=log_content)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
