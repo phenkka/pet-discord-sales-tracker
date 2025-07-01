@@ -1,13 +1,67 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Логи {{ bot_name }}</title>
+    <title>Logs — {{ bot_name }}</title>
+    <style>
+        body {
+            background: #181a1b;
+            color: #f5f6fa;
+            font-family: 'SF Pro Display', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            letter-spacing: 0.01em;
+        }
+        .panel {
+            max-width: 800px;
+            margin: 3em auto 0 auto;
+            background: rgba(28,30,33,0.98);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px #0005, 0 1.5px 4px #0002;
+            padding: 2.5em 2.5em 2em 2.5em;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            font-size: 2em;
+            letter-spacing: 0.03em;
+            margin-bottom: 1.2em;
+        }
+        a {
+            color: #2997ff;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        a:hover {
+            color: #66aaff;
+            text-decoration: underline;
+        }
+        .log-box {
+            background: #20232e;
+            color: #e0e6ed;
+            border-radius: 14px;
+            padding: 1.5em 1.5em;
+            font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
+            font-size: 1.01em;
+            line-height: 1.6;
+            box-shadow: 0 2px 12px #0004;
+            overflow-x: auto;
+            margin-bottom: 2em;
+            white-space: pre-wrap;
+            max-height: 600px;
+        }
+        .top-link {
+            display: block;
+            text-align: right;
+            margin-bottom: 1.5em;
+            font-size: 1.08em;
+        }
+    </style>
 </head>
 <body>
-    <h1>Логи бота: {{ bot_name }}</h1>
-    <pre style="background:#222;color:#eee;padding:1em;max-width:900px;overflow-x:auto;">
-{{ log_content }}
-    </pre>
-    <a href="{{ url_for('index') }}">Назад к панели</a>
+    <div class="panel">
+        <a href="{{ url_for('index') }}" class="top-link">Back to Admin Panel</a>
+        <h1>Logs for {{ bot_name }}</h1>
+        <div class="log-box">{{ log_content }}</div>
+    </div>
 </body>
 </html> 

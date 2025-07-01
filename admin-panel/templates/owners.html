@@ -1,49 +1,147 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Владельцы каналов</title>
+    <title>Channel Owners</title>
     <style>
-        table { border-collapse: collapse; margin: 2em 0; }
-        th, td { border: 1px solid #aaa; padding: 8px 16px; }
-        th { background: #f0f0f0; }
-        tr:nth-child(even) { background: #fafafa; }
+        body {
+            background: #181a1b;
+            color: #f5f6fa;
+            font-family: 'SF Pro Display', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            letter-spacing: 0.01em;
+        }
+        .panel {
+            max-width: 900px;
+            margin: 3em auto 0 auto;
+            background: rgba(28,30,33,0.98);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px #0005, 0 1.5px 4px #0002;
+            padding: 2.5em 2.5em 2em 2.5em;
+        }
+        h1, h2 {
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+        h1 { font-size: 2.1em; margin-bottom: 0.7em; }
+        h2 { font-size: 1.2em; color: #a0a4ab; margin-bottom: 1.5em; }
+        a {
+            color: #2997ff;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        a:hover {
+            color: #66aaff;
+            text-decoration: underline;
+        }
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1em;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2em;
+        }
+        label {
+            display: flex;
+            flex-direction: column;
+            font-size: 1em;
+        }
+        input[type="text"], input[type="number"] {
+            background: #23283a;
+            color: #f5f6fa;
+            border: 1px solid #444a5a;
+            border-radius: 8px;
+            padding: 0.5em 1em;
+            margin-top: 0.3em;
+            font-size: 1em;
+        }
+        button {
+            background: #222326;
+            color: #f5f6fa;
+            border: none;
+            border-radius: 8px;
+            padding: 0.55em 1.5em;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 4px #0002;
+        }
+        button:hover {
+            background: #2997ff;
+            color: #fff;
+            box-shadow: 0 2px 8px #2997ff33;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 2em 0;
+            background: #23283a;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px #0004;
+        }
+        th, td {
+            border: 1px solid #444a5a;
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 1em;
+        }
+        th {
+            background: #23283a;
+            color: #2997ff;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #20232e;
+        }
+        tr:hover {
+            background: #2a3142;
+        }
+        .actions {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <h1>Владельцы каналов</h1>
-    <a href="{{ url_for('index') }}">Назад к панели</a>
-    <h2>Добавить запись</h2>
-    <form method="post" style="margin-bottom:2em;">
-        <input type="hidden" name="add" value="1">
-        <label>channel_id: <input type="number" name="channel_id" required></label>
-        <label>username: <input type="text" name="username" required></label>
-        <label>update_chat_id: <input type="number" name="update_chat_id" required></label>
-        <label>group_number: <input type="number" name="group_number" required></label>
-        <button type="submit">Добавить</button>
-    </form>
-    <table>
-        <thead>
-            <tr>
-                {% for col in columns %}
-                <th>{{ col }}</th>
+    <div class="panel">
+        <h1>Channel Owners</h1>
+        <a href="{{ url_for('index') }}">Back to Admin Panel</a>
+        <h2>Add New Record</h2>
+        <form method="post">
+            <input type="hidden" name="add" value="1">
+            <label>Channel ID: <input type="number" name="channel_id" required></label>
+            <label>Username: <input type="text" name="username" required></label>
+            <label>Update Chat ID: <input type="number" name="update_chat_id" required></label>
+            <label>Group Number: <input type="number" name="group_number" required></label>
+            <button type="submit">Add</button>
+        </form>
+        <table>
+            <thead>
+                <tr>
+                    {% for col in columns %}
+                    <th>{{ col|replace('_', ' ')|title }}</th>
+                    {% endfor %}
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for cell in row %}
+                    <td>{{ cell }}</td>
+                    {% endfor %}
+                    <td class="actions">
+                        <form method="post" style="display:inline;">
+                            <button type="submit" name="delete" value="{{ row[0] }}" onclick="return confirm('Delete this record?');">Delete</button>
+                        </form>
+                    </td>
+                </tr>
                 {% endfor %}
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-            <tr>
-                {% for cell in row %}
-                <td>{{ cell }}</td>
-                {% endfor %}
-                <td>
-                    <form method="post" style="display:inline;">
-                        <button type="submit" name="delete" value="{{ row[0] }}" onclick="return confirm('Удалить запись?');">Удалить</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html> 
