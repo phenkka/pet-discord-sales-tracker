@@ -95,3 +95,11 @@ class Database:
         query = "UPDATE bonus SET commission = %s WHERE profit = %s"
         params = (commission, profit)
         self.execute_write_query(query, params)
+
+    def get_all_sales(self):
+        query = "SELECT * FROM sales ORDER BY sale_date DESC, sale_time DESC"
+        return self.execute_read_many_query(query)
+
+    def get_sales_by_user(self):
+        query = "SELECT username, SUM(price) as total_sales FROM sales GROUP BY username ORDER BY total_sales DESC"
+        return self.execute_read_many_query(query)

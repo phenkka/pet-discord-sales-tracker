@@ -167,5 +167,21 @@ def bonus():
     columns = ['profit', 'commission']
     return render_template('bonus.html', rows=rows, columns=columns)
 
+@app.route('/sales')
+def sales():
+    db = get_db()
+    rows = db.get_all_sales()
+    columns = []
+    if rows:
+        conn = db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT * FROM sales LIMIT 1')
+                columns = [desc[0] for desc in cursor.description]
+        finally:
+            db.release_connection(conn)
+    sales_by_user = db.get_sales_by_user()
+    return render_template('sales.html', rows=rows, columns=columns, sales_by_user=sales_by_user)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

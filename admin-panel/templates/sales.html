@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sales</title>
+    <style>
+        body {
+            background: #181a1b;
+            color: #f5f6fa;
+            font-family: 'SF Pro Display', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            letter-spacing: 0.01em;
+        }
+        .panel {
+            max-width: 900px;
+            margin: 3em auto 0 auto;
+            background: rgba(28,30,33,0.98);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px #0005, 0 1.5px 4px #0002;
+            padding: 2.5em 2.5em 2em 2.5em;
+        }
+        h1, h2 {
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+        h1 { font-size: 2.1em; margin-bottom: 0.7em; }
+        h2 { font-size: 1.2em; color: #a0a4ab; margin-bottom: 1.5em; }
+        a {
+            color: #2997ff;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        a:hover {
+            color: #66aaff;
+            text-decoration: underline;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 2em 0;
+            background: #23283a;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px #0004;
+        }
+        th, td {
+            border: 1px solid #444a5a;
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 1em;
+        }
+        th {
+            background: #23283a;
+            color: #2997ff;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #20232e;
+        }
+        tr:hover {
+            background: #2a3142;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h1>Sales</h1>
+        <a href="{{ url_for('index') }}">Back to Admin Panel</a>
+        <h2>Top Sellers (by Total Sales)</h2>
+        <ul>
+            {% for user, total in sales_by_user[:3] %}
+            <li><b>{{ user }}</b>: {{ total }} EUR</li>
+            {% endfor %}
+        </ul>
+        <canvas id="salesChart" width="800" height="350" style="background:#23283a;border-radius:14px;"></canvas>
+        <table>
+            <thead>
+                <tr>
+                    {% for col in columns %}
+                    <th>{{ col|replace('_', ' ')|title }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for cell in row %}
+                    <td>{{ cell }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const salesLabels = {{ sales_by_user|map(attribute=0)|list|tojson }};
+        const salesData = {{ sales_by_user|map(attribute=1)|list|tojson }};
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: salesLabels,
+                datasets: [{
+                    label: 'Total Sales (EUR)',
+                    data: salesData,
+                    backgroundColor: '#2997ff',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false }
+                },
+                scales: {
+                    x: { ticks: { color: '#f5f6fa' } },
+                    y: { ticks: { color: '#f5f6fa' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
