@@ -91,7 +91,10 @@
 <body>
     <div class="panel">
         <h1>Bot Admin Panel</h1>
-        <a href="{{ url_for('owners') }}" class="top-link">Channel Owners</a>
+        <div class="top-link">
+            <a href="{{ url_for('owners') }}">Channel Owners</a> |
+            <a href="{{ url_for('bonus') }}">Bonus Thresholds</a>
+        </div>
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             <ul>

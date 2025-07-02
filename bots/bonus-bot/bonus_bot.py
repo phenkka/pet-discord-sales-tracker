@@ -17,19 +17,14 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
+BONUS_THRESHOLDS = []
 
-BONUS_THRESHOLDS = [
-    (295, 5),
-    (472, 10),
-    (590, 15),
-    (885, 20),
-    (1180, 50),
-    (1475, 55),
-    (1770, 60),
-    (2065, 80),
-    (2360, 90),
-    (2950, 100),
-]
+def load_bonus_thresholds():
+    global BONUS_THRESHOLDS
+    BONUS_THRESHOLDS = db.get_bonus_thresholds() or []
+
+# Загружаем пороги при старте
+load_bonus_thresholds()
 
 def get_bonus_for_revenue(revenue):
     bonus = 0
@@ -126,6 +121,7 @@ async def check_and_notify_bonuses():
 @bot.event
 async def on_ready():
     logger.info(f"Logged in as {bot.user}")
+    load_bonus_thresholds()  # обновляем пороги при запуске
     check_and_notify_bonuses.start()
 
 if __name__ == "__main__":

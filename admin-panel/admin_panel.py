@@ -136,5 +136,37 @@ def owners():
             db.release_connection(conn)
     return render_template('owners.html', rows=rows, columns=columns)
 
+@app.route('/bonus', methods=['GET', 'POST'])
+def bonus():
+    db = get_db()
+    if request.method == 'POST':
+        if 'add' in request.form:
+            try:
+                profit = int(request.form['profit'])
+                commission = int(request.form['commission'])
+                db.add_bonus(profit, commission)
+                flash('Bonus threshold added!', 'success')
+            except Exception as e:
+                flash(f'Error adding bonus: {e}', 'danger')
+        elif 'delete' in request.form:
+            try:
+                profit = int(request.form['delete'])
+                db.delete_bonus(profit)
+                flash('Bonus threshold deleted!', 'success')
+            except Exception as e:
+                flash(f'Error deleting bonus: {e}', 'danger')
+        elif 'edit' in request.form:
+            try:
+                profit = int(request.form['profit'])
+                commission = int(request.form['commission'])
+                db.update_bonus(profit, commission)
+                flash('Bonus threshold updated!', 'success')
+            except Exception as e:
+                flash(f'Error updating bonus: {e}', 'danger')
+        return redirect(url_for('bonus'))
+    rows = db.get_all_bonus()
+    columns = ['profit', 'commission']
+    return render_template('bonus.html', rows=rows, columns=columns)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

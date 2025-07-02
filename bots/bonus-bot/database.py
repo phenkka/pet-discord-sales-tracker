@@ -106,3 +106,11 @@ class Database:
         """
         params = (channel_ids, start_date, end_date)
         return self.execute_read_many_query(query, params)
+
+    def get_bonus_thresholds(self):
+        query = """
+            SELECT profit, commision
+            FROM bonus
+            ORDER BY profit ASC
+        """
+        return self.execute_read_many_query(query)

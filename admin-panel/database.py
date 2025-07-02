@@ -76,3 +76,22 @@ class Database:
         """
         params = (channel_id,)
         self.execute_write_query(query, params)
+
+    def get_all_bonus(self):
+        query = "SELECT profit, commission FROM bonus ORDER BY profit ASC"
+        return self.execute_read_many_query(query)
+
+    def add_bonus(self, profit, commission):
+        query = "INSERT INTO bonus (profit, commission) VALUES (%s, %s)"
+        params = (profit, commission)
+        self.execute_write_query(query, params)
+
+    def delete_bonus(self, profit):
+        query = "DELETE FROM bonus WHERE profit = %s"
+        params = (profit,)
+        self.execute_write_query(query, params)
+
+    def update_bonus(self, profit, commission):
+        query = "UPDATE bonus SET commission = %s WHERE profit = %s"
+        params = (commission, profit)
+        self.execute_write_query(query, params)
