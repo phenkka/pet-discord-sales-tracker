@@ -1,5 +1,6 @@
 import os
 import discord
+import logging
 
 from collections import defaultdict
 from discord.ext import commands, tasks
@@ -9,14 +10,13 @@ from database import Database
 
 load_dotenv()
 
-TOKEN = os.getenv("BONUS_BOT_TOKEN")
+TOKEN = os.getenv("BONUS_TOKEN")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
-BONUS_CHANNEL = int(os.getenv("BONUS_CHANNEL", 0))
 
 BONUS_THRESHOLDS = [
     (295, 5),
@@ -40,6 +40,16 @@ def get_bonus_for_revenue(revenue):
             break
     return bonus
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
 db = Database(
     minconn=1,
     maxconn=10,
@@ -53,72 +63,69 @@ db = Database(
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-GROUPS = defaultdict(list)
-UPDATE_CHATS = {}
-
-for key, value in os.environ.items():
-    if key.startswith("GROUP_"):
-        group_id = key.split("_")[1]
-        GROUPS[group_id] = [int(x) for x in value.split(",")]
-    elif key.startswith("UPDATE_CHAT_"):
-        group_id = key.split("_")[2]
-        UPDATE_CHATS[group_id] = int(value)
+GROUPS = db.get_group_channels()
+UPDATE_CHATS = db.get_update_channels()
 
 
 @tasks.loop(minutes=5)
 async def check_and_notify_bonuses():
     today = date.today()
-    this_monday = today - timedelta(days=today.weekday())
-    this_sunday = this_monday + timedelta(days=6)
+    last_monday = today - timedelta(days=today.weekday() + 7)
+    last_sunday = last_monday + timedelta(days=6)
 
-    start_date = this_monday
-    end_date = this_sunday
+    start_date = last_monday
+    end_date = last_sunday
 
     for group_id, channel_ids in GROUPS.items():
         update_channel_id = UPDATE_CHATS.get(group_id)
         if not update_channel_id:
-            print(f"❌ No UPDATE_CHAT for group {group_id}")
+            logger.warning(f"No UPDATE_CHAT for group {group_id}")
             continue
 
         msg = f"💸 **WEEKLY SALES LEADERBOARD (Group {group_id})**\n"
         msg += f"**Date: **{start_date.strftime('%d %b')} till {end_date.strftime('%d %b')}\n\n"
 
-        all_sales = []
-        for channel_id in channel_ids:
-            sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
+        # Current week
+        weekly_sales = db.get_weekly_sales_by_channels_for_period(channel_ids, start_date, end_date)
+        # Previous week
+        prev_weekly_sales = db.get_weekly_sales_by_channels_for_period(channel_ids, start_date, end_date)
+        prev_bonuses = {username: get_bonus_for_revenue(total_sales) for username, total_sales in (prev_weekly_sales or [])}
 
-            if not sales or not sales['sales_by_user']:
-                continue
-            all_sales.extend(sales['sales_by_user'])
+        if not weekly_sales:
+            msg += "No sales for this week."
+        else:
+            msg += "**User | Total Sales | Bonus**\n"
+            msg += ":---|:---:|:---:\n"
+            for username, total_sales in weekly_sales:
+                bonus = get_bonus_for_revenue(total_sales)
+                msg += f"{username} | {total_sales} | {bonus}\n"
+                prev_bonus = prev_bonuses.get(username, 0)
+                if bonus > prev_bonus and bonus > 0:
+                    # Congratulation for new bonus
+                    congrats_msg = (
+                        f"BONUS UNLOCKED!  💸 🔓\n\n"
+                        f"Congratulations @{username}! You unlocked a new bonus! 🚀\n\n"
+                        f"Bonus Reached:\nAmount: {bonus}"
+                    )
+                    channel = bot.get_channel(int(update_channel_id))
+                    if channel and isinstance(channel, discord.TextChannel):
+                        await channel.send(congrats_msg)
+                        logger.info(f"Sent bonus unlocked message for {username} (bonus: {bonus}) to update chat {update_channel_id} (group {group_id})")
+                    else:
+                        logger.error(f"Text channel {update_channel_id} not found for group {group_id} (bonus unlocked message)")
 
-    for user in users:
-        accounts = []
-
-        all_accounts_reached = True
-        min_revenue = float('inf')
-
-        for account in accounts:
-            revenue = db.get_sales_by_user_and_date(account, start_date, end_date)
-            if revenue < BONUS_THRESHOLDS[0][0]:
-                all_accounts_reached = False
-                break
-            min_revenue = min(min_revenue, revenue)
-
-        if all_accounts_reached:
-            bonus = get_bonus_for_revenue(min_revenue)
-            channel = bot.get_channel(BONUS_CHANNEL)
-            if channel:
-                await channel.send(
-                    f"🎉 **{user}** unlocked a bonus: **${bonus} per account**! 🤑\n"
-                    f"Gross revenue on all accounts (this week): **${min_revenue}**"
-                )
-            else:
-                print(f"Channel ID {BONUS_CHANNEL} not found.")
+        # Send weekly leaderboard
+        channel = bot.get_channel(int(update_channel_id))
+        if channel and isinstance(channel, discord.TextChannel):
+            await channel.send(msg)
+            logger.info(f"Sent weekly leaderboard to update chat {update_channel_id} (group {group_id})")
+        else:
+            logger.error(f"Text channel {update_channel_id} not found for group {group_id} (leaderboard)")
 
 
 @bot.event
 async def on_ready():
-    print(f"✅ Logged in as {bot.user}")
+    logger.info(f"Logged in as {bot.user}")
     check_and_notify_bonuses.start()
 
 if __name__ == "__main__":
