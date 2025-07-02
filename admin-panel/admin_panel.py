@@ -94,7 +94,6 @@ def stop_bot(bot_name):
 def view_logs(bot_name):
     try:
         container = client.containers.get(bot_name)
-        # Читаем последние 100 строк файла bot.log внутри контейнера
         exec_result = container.exec_run('tail -n 100 bot.log')
         log_content = exec_result.output.decode('utf-8') if exec_result.exit_code == 0 else 'Логи не найдены или ошибка доступа.'
     except Exception as e:

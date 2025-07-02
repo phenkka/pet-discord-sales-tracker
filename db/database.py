@@ -85,8 +85,26 @@ class Database:
         );
         """
 
+        create_owners_table = """
+        CREATE TABLE IF NOT EXISTS channel_owners (
+            channel_id BIGSERIAL PRIMARY KEY,
+            username TEXT NOT NULL,
+            update_chat_id BIGINT NOT NULL,
+            group_number INTEGER NOT NULL
+        );
+        """
+
+        create_bonus_table = """
+        CREATE TABLE IF NOT EXISTS bonus (
+            profit INTEGER,
+            commission INTEGER
+        );
+        """
+
         self.execute_write_query(create_sales_table)
         self.execute_write_query(create_clocked_table)
+        self.execute_write_query(create_owners_table)
+        self.execute_write_query(create_bonus_table)
 
     def insert_sale(self, username: str, channel_id: int, price: int, timestamp: datetime):
         query = """
@@ -131,7 +149,15 @@ class Database:
             WHERE channel_id = %s
             GROUP BY username
         """
-        # Здесь clocked_times не имеет даты, так что фильтрация по времени не работает —
-        # нужно будет учитывать это, если потребуется детализация.
         params = (channel_id,)
         return self.execute_read_many_query(query, params)
+
+    def get_group_channels(self):
+        query = """
+            SELECT channel_id
+            FROM channel_owners
+        """
+        result = self.execute_read_many_query(query)
+        if result:
+            return [channel_id for (channel_id,) in result]
+        return []

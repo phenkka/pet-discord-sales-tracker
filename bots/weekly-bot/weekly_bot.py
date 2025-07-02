@@ -42,11 +42,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 GROUPS = db.get_group_channels()
 UPDATE_CHATS = db.get_update_channels()
-
+MANAGEMENT = int(os.getenv("MANAGEMENT"))
 CLOCK = int(os.getenv("CLOCK_CHAT"))
 
 
-@tasks.loop(minutes=2)
+@tasks.loop(minutes=10080)
 async def send_weekly_report():
     today = date.today()
     last_monday = today - timedelta(days=today.weekday() + 7)
@@ -119,8 +119,14 @@ async def send_weekly_report():
         else:
             logger.error(f"WEEKLY: Channel ID {update_channel_id} not found for {group_id} group.")
 
+        management_channel = bot.get_channel(MANAGEMENT)
+        if management_channel:
+            await management_channel.send(msg)
+        else:
+            logger.error("WEEKLY: MANAGEMENT channel not found.")
 
-@tasks.loop(minutes=2)  # Для теста, потом можно minutes=1440 для запуска раз в сутки
+
+@tasks.loop(minutes=1440)
 async def send_daily_report():
     today = date.today()
     yesterday = today - timedelta(days=1)
@@ -185,6 +191,12 @@ async def send_daily_report():
             await channel.send(msg)
         else:
             logger.error(f"DAILY: Channel ID {update_channel_id} not found for {group_id} group.")
+
+        management_channel = bot.get_channel(MANAGEMENT)
+        if management_channel:
+            await management_channel.send(msg)
+        else:
+            logger.error("WEEKLY: MANAGEMENT channel not found.")
 
 
 @bot.event

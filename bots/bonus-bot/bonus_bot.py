@@ -17,15 +17,6 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
-BONUS_THRESHOLDS = []
-
-def load_bonus_thresholds():
-    global BONUS_THRESHOLDS
-    BONUS_THRESHOLDS = db.get_bonus_thresholds() or []
-
-# Загружаем пороги при старте
-load_bonus_thresholds()
-
 def get_bonus_for_revenue(revenue):
     bonus = 0
     for threshold, amount in BONUS_THRESHOLDS:
@@ -55,6 +46,15 @@ db = Database(
     port=POSTGRES_PORT
 )
 
+BONUS_THRESHOLDS = []
+
+def load_bonus_thresholds():
+    global BONUS_THRESHOLDS
+    BONUS_THRESHOLDS = db.get_bonus_thresholds() or []
+
+# Загружаем пороги при старте
+load_bonus_thresholds()
+
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -62,7 +62,7 @@ GROUPS = db.get_group_channels()
 UPDATE_CHATS = db.get_update_channels()
 
 
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=10080)
 async def check_and_notify_bonuses():
     today = date.today()
     last_monday = today - timedelta(days=today.weekday() + 7)

@@ -1,4 +1,5 @@
 import re
+import logging
 
 from discord import Intents
 from discord.ext import commands
@@ -11,29 +12,17 @@ load_dotenv()
 
 
 TOKEN = os.getenv("REPORT_TOKEN")
-
-group_vars = ["GROUP_09", "GROUP_010"] # "GROUP_011", "GROUP_012", "GROUP_013"
-SALES_CHANNELS = []
-for var in group_vars:
-    value = os.getenv(var)
-    if value:
-        SALES_CHANNELS.extend(map(int, value.split(",")))
-
 CLOCK_CHANNEL = int(os.getenv("CLOCK_CHAT"))
 
-
-# SALES_CHANNELS = [
-#     int(os.getenv("F2F_TA_09_JOWISSA")),
-#     int(os.getenv("F2F_TA_09_RIAD")),
-#     int(os.getenv("F2F_TA_09_GENNA")),
-#     int(os.getenv("F2F_TA_09_GLYDEL")),
-#     int(os.getenv("F2F_TA_010_GENNA")),
-#     int(os.getenv("F2F_TA_010_PATRIC")),
-#     int(os.getenv("F2F_TA_011_GENNA")),
-#     int(os.getenv("F2F_TA_012_GLYDEL")),
-#     int(os.getenv("F2F_TA_012_GENNA")),
-#     int(os.getenv("F2F_TA_013_IVY"))
-# ]
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # CLOCK_CHANNEL = int(os.getenv("CLOCK_CHANNEL"))
 
@@ -58,12 +47,13 @@ db = Database(
     port=POSTGRES_PORT
 )
 
+SALES_CHANNELS = db.get_group_channels()
+
 try:
     conn = db.get_connection()
-    print("✅ Успешное подключение к базе данных")
     db.release_connection(conn)
 except Exception as e:
-    print(f"❌ Ошибка подключения к БД: {e}")
+    print(f"❌ Error: {e}")
 
 
 @bot.event
@@ -85,7 +75,7 @@ async def on_message(message):
             minutes = int(match.group(3))
             seconds = int(match.group(4))
 
-            print(f"⏱️ {username} проработал {hours}ч {minutes}м {seconds}с")
+            logger.info(f"⏱️ {username} works {hours}h {minutes}m {seconds}s")
             db.insert_clocked_time(
                 username=username,
                 hours=hours,
@@ -100,7 +90,7 @@ async def on_message(message):
         price = int(match[0]) if match else None
 
         if price:
-            print(f"Продажа: {message.author} | {message.created_at} | {price}")
+            logger.info(f"Sale: {message.author} | {message.created_at} | {price}")
             db.insert_sale(
                 username=str(message.author.display_name),
                 channel_id=channel_id,

@@ -46,7 +46,7 @@ UPDATE_CHATS = db.get_update_channels()
 LEADERBOARD_CHAT = int(os.getenv("LEADERBOARD_CHAT"))
 
 
-@tasks.loop(minutes=2)  # или поменяй на days=7 после тестов
+@tasks.loop(minutes=10080)
 async def send_team_leaderboard():
     today = date.today()
     last_monday = today - timedelta(days=today.weekday() + 7)
