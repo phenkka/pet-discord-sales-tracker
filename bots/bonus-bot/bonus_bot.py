@@ -77,7 +77,7 @@ async def check_and_notify_bonuses():
             logger.warning(f"No UPDATE_CHAT for group {group_id}")
             continue
 
-        msg = f"💸 **WEEKLY SALES LEADERBOARD (Group {group_id})**\n"
+        msg = f"💸 **WEEKLY SALES LEADERBOARD (Group TA-0{group_id})**\n"
         msg += f"**Date: **{start_date.strftime('%d %b')} till {end_date.strftime('%d %b')}\n\n"
 
         # Current week

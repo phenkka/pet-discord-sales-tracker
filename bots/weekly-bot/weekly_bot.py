@@ -62,7 +62,7 @@ async def send_weekly_report():
             logger.error(f"WEEKLY: No UPDATE_CHAT for group {group_id}.")
             continue
 
-        msg = f"💸 **WEEKLY SALES LEADERBOARD (Group {group_id})**\n"
+        msg = f"💸 **WEEKLY SALES LEADERBOARD (Group TA-0{group_id})**\n"
         msg += f"**Date: **{start_date.strftime('%d %b')} till {end_date.strftime('%d %b')}\n\n"
 
         all_sales = []
@@ -141,7 +141,7 @@ async def send_daily_report():
             logger.error(f"No UPDATE_CHAT for group {group_id}.")
             continue
 
-        msg = f"💸 **DAILY SALES LEADERBOARD (Group {group_id})**\n"
+        msg = f"💸 **DAILY SALES LEADERBOARD (Group TA-0{group_id})**\n"
         msg += f"**Date: **{start_date.strftime('%d %b %Y')}\n\n"
 
         all_sales = []
