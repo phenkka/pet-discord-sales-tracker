@@ -58,10 +58,10 @@ except Exception as e:
 
 @bot.event
 async def on_message(message):
-    logger.info(f"📥: {message.content}")
     channel_id = message.channel.id
 
     if channel_id == 1334830760674197524:
+        logger.info("Im in")
         if message.mentions:
             user = message.mentions[0]
             username = user.display_name
