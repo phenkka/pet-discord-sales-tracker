@@ -58,6 +58,7 @@ except Exception as e:
 
 @bot.event
 async def on_message(message):
+    logger.info(f"📥: {message.content}")
     channel_id = message.channel.id
 
     if channel_id == CLOCK_CHANNEL and message.author.bot:
