@@ -61,27 +61,31 @@ async def on_message(message):
     channel_id = message.channel.id
 
     if channel_id == CLOCK_CHANNEL and message.author.bot:
-        user = message.mentions[0]
-        username = user.display_name
-        match = re.search(
-            r"@(\w+).*?adding (\d+) hours, (\d+) minutes, (\d+) seconds",
-            message.content
-        )
+        if message.mentions:
+            user = message.mentions[0]
+            username = user.display_name
 
-        if match:
-            hours = int(match.group(2))
-            minutes = int(match.group(3))
-            seconds = int(match.group(4))
-
-            logger.info(f"⏱️ {username} works {hours}h {minutes}m {seconds}s")
-            db.insert_clocked_time(
-                username=username,
-                hours=hours,
-                minutes=minutes,
-                seconds=seconds,
-                channel_id=CLOCK_CHANNEL,
-                timestamp=message.created_at
+            match = re.search(
+                r"adding\s+(?:(\d+)\s+hours?,\s*)?(?:(\d+)\s+minutes?,\s*)?(?:(\d+)\s+seconds?)?",
+                message.content
             )
+
+            if match:
+                hours = int(match.group(1)) if match.group(1) else 0
+                minutes = int(match.group(2)) if match.group(2) else 0
+                seconds = int(match.group(3)) if match.group(3) else 0
+
+                logger.info(f"⏱️ {username} works {hours}h {minutes}m {seconds}s")
+                db.insert_clocked_time(
+                    username=username,
+                    hours=hours,
+                    minutes=minutes,
+                    seconds=seconds,
+                    channel_id=CLOCK_CHANNEL,
+                    timestamp=message.created_at
+                )
+            else:
+                logger.warning(f"❌ Не удалось распарсить время из сообщения: {message.content}")
 
     if channel_id in SALES_CHANNELS:
         match = re.findall(r'\d+', message.content.replace(' ', ''))
