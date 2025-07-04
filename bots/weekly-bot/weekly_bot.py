@@ -160,11 +160,12 @@ async def send_daily_report():
             logger.info(f"{all_sales}")
             for username, amount in all_sales:
                 user_totals[username] += amount
+            logger.info(f"{user_totals}")
 
             sales_per_day = 0
             top_chatter = ["", 0]
             works = db.get_clocked_time_by_channel_and_date(CLOCK, start_date, end_date)
-            logger.info({works})
+            logger.info(f"{works}")
             for username, total_sales in sorted(user_totals.items(), key=lambda x: x[1], reverse=True):
                 for worker in works:
                     if worker[0] != username:
