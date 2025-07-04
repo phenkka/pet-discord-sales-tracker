@@ -66,15 +66,15 @@ async def on_message(message):
             username = user.display_name
 
             match = re.search(
-                r"@(\w+).*?adding\s+(?:(\d+)\s+hours?,\s*)?(?:(\d+)\s+minutes?,\s*)?(?:(\d+)\s+seconds?)?",
+                r"@(.+?)\s+is succesfully.*?adding\s+(?:(\d+)\s+hours?,\s*)?(?:(\d+)\s+minutes?,\s*)?(?:(\d+)\s+seconds?)?",
                 message.content
             )
 
             logger.info(f"{match}")
             if match:
-                hours = int(match.group(1)) if match.group(1) else 0
-                minutes = int(match.group(2)) if match.group(2) else 0
-                seconds = int(match.group(3)) if match.group(3) else 0
+                hours = int(match.group(2)) if match.group(2) else 0
+                minutes = int(match.group(3)) if match.group(3) else 0
+                seconds = int(match.group(4)) if match.group(4) else 0
 
                 logger.info(f"⏱️ {username} works {hours}h {minutes}m {seconds}s")
                 db.insert_clocked_time(
