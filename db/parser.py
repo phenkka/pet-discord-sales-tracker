@@ -60,7 +60,7 @@ except Exception as e:
 async def on_message(message):
     channel_id = message.channel.id
 
-    if channel_id == 1334830760674197524 and "clocked out" in message.content.lower():
+    if channel_id == 1334830760674197524:
         logger.info("📥 Обнаружено сообщение о завершении смены.")
         # Поиск ника (первое слово с @)
         mention_match = re.search(r'@(\w+)', message.content)
