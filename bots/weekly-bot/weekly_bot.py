@@ -69,7 +69,7 @@ async def send_weekly_report():
         for channel_id in channel_ids:
             sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
             if not sales or not sales['sales_by_user']:
-                logger.error(f"WEEKLY: Sales is empty for {group_id} group.")
+                logger.error(f"WEEKLY: Sales is empty for {group_id} group, channel {channel_id}.")
                 continue
             all_sales.extend(sales['sales_by_user'])
 
@@ -148,7 +148,7 @@ async def send_daily_report():
         for channel_id in channel_ids:
             sales = db.get_sales_by_channel_and_date(channel_id, start_date, end_date)
             if not sales or not sales['sales_by_user']:
-                logger.error(f"DAILY: Sales is empty for {group_id} group.")
+                logger.error(f"DAILY: Sales is empty for {group_id} group, channel {channel_id}.")
                 continue
             all_sales.extend(sales['sales_by_user'])
 
