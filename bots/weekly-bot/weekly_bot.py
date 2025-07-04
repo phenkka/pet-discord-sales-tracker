@@ -157,7 +157,7 @@ async def send_daily_report():
             msg += "No sales data found.\n"
         else:
             user_totals = defaultdict(int)
-            logger.info(f"{user_totals}")
+            logger.info(f"{all_sales}")
             for username, amount in all_sales:
                 user_totals[username] += amount
 
