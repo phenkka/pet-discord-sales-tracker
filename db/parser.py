@@ -61,31 +61,33 @@ async def on_message(message):
     channel_id = message.channel.id
 
     if channel_id == 1334830760674197524:
-        logger.info("Im in.")
 
-        match = re.search(
-            r"@(.+?)\s+is succesfully.*?adding\s+(?:(\d+)\s+hours?,\s*)?(?:(\d+)\s+minutes?,\s*)?(?:(\d+)\s+seconds?)?",
-            message.content
+        # Поиск ника (первое слово с @)
+        mention_match = re.search(r'@(\w+)', message.content)
+        if not mention_match:
+            logger.warning(f"❌ Не удалось найти упоминание пользователя в сообщении: {message.content}")
+            return
+
+        username = mention_match.group(1)
+
+        # Поиск времени (число + hour/minute/second)
+        hours_match = re.search(r'(\d+)\s+hours?', message.content, re.IGNORECASE)
+        minutes_match = re.search(r'(\d+)\s+minutes?', message.content, re.IGNORECASE)
+        seconds_match = re.search(r'(\d+)\s+seconds?', message.content, re.IGNORECASE)
+
+        hours = int(hours_match.group(1)) if hours_match else 0
+        minutes = int(minutes_match.group(1)) if minutes_match else 0
+        seconds = int(seconds_match.group(1)) if seconds_match else 0
+
+        logger.info(f"⏱️ {username} worked {hours}h {minutes}m {seconds}s")
+        db.insert_clocked_time(
+            username=username,
+            hours=hours,
+            minutes=minutes,
+            seconds=seconds,
+            channel_id=CLOCK_CHANNEL,
+            timestamp=message.created_at
         )
-
-        logger.info(f"{match}")
-        if match:
-            username = match.group(1).strip()
-            hours = int(match.group(2)) if match.group(2) else 0
-            minutes = int(match.group(3)) if match.group(3) else 0
-            seconds = int(match.group(4)) if match.group(4) else 0
-
-            logger.info(f"⏱️ {username} works {hours}h {minutes}m {seconds}s")
-            db.insert_clocked_time(
-                username=username,
-                hours=hours,
-                minutes=minutes,
-                seconds=seconds,
-                channel_id=CLOCK_CHANNEL,
-                timestamp=message.created_at
-            )
-        else:
-            logger.warning(f"❌ Не удалось распарсить время из сообщения: {message.content}")
 
     if channel_id in SALES_CHANNELS:
         match = re.findall(r'\d+', message.content.replace(' ', ''))
