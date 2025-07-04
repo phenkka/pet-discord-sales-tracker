@@ -157,6 +157,7 @@ async def send_daily_report():
             msg += "No sales data found.\n"
         else:
             user_totals = defaultdict(int)
+            logger.info(f"{user_totals}")
             for username, amount in all_sales:
                 user_totals[username] += amount
 
@@ -174,6 +175,7 @@ async def send_daily_report():
                     if top_chatter[1] < total_sales:
                         top_chatter[0] = username
                         top_chatter[1] = total_sales
+                    logger.info(f"{username}, {total_sales}, {hours:.2f}, {avg:.2f}")
 
                     msg += f"**@{username}**\n"
                     msg += f"**Sales: **{total_sales} EUR.\n"
