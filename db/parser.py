@@ -59,10 +59,8 @@ except Exception as e:
 @bot.event
 async def on_message(message):
     channel_id = message.channel.id
-    if message.author.bot:
-        return
 
-    if channel_id == CLOCK_CHANNEL:
+    if channel_id == CLOCK_CHANNEL and message.author.bot:
         user = message.mentions[0]
         username = user.display_name
         match = re.search(
