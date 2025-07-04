@@ -69,6 +69,7 @@ async def on_message(message):
             return
 
         username = mention_match.group(1)
+        logger.info(f"{username}")
 
         # Поиск времени (число + hour/minute/second)
         hours_match = re.search(r'(\d+)\s+hours?', message.content, re.IGNORECASE)
