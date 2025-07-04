@@ -61,7 +61,7 @@ async def on_message(message):
     logger.info(f"📥: {message.content}")
     channel_id = message.channel.id
 
-    if channel_id == CLOCK_CHANNEL and message.author.bot:
+    if channel_id == 1334830760674197524 and message.author.bot:
         if message.mentions:
             user = message.mentions[0]
             username = user.display_name
