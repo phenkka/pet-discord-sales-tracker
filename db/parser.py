@@ -62,34 +62,30 @@ async def on_message(message):
 
     if channel_id == 1334830760674197524:
         logger.info("Im in.")
-        if message.mentions:
-            logger.info("Have a msg.")
-            user = message.mentions[0]
-            username = user.display_name
-            logger.info(f"{username}")
 
-            match = re.search(
-                r"@(.+?)\s+is succesfully.*?adding\s+(?:(\d+)\s+hours?,\s*)?(?:(\d+)\s+minutes?,\s*)?(?:(\d+)\s+seconds?)?",
-                message.content
+        match = re.search(
+            r"@(.+?)\s+is succesfully.*?adding\s+(?:(\d+)\s+hours?,\s*)?(?:(\d+)\s+minutes?,\s*)?(?:(\d+)\s+seconds?)?",
+            message.content
+        )
+
+        logger.info(f"{match}")
+        if match:
+            username = match.group(1).strip()
+            hours = int(match.group(2)) if match.group(2) else 0
+            minutes = int(match.group(3)) if match.group(3) else 0
+            seconds = int(match.group(4)) if match.group(4) else 0
+
+            logger.info(f"⏱️ {username} works {hours}h {minutes}m {seconds}s")
+            db.insert_clocked_time(
+                username=username,
+                hours=hours,
+                minutes=minutes,
+                seconds=seconds,
+                channel_id=CLOCK_CHANNEL,
+                timestamp=message.created_at
             )
-
-            logger.info(f"{match}")
-            if match:
-                hours = int(match.group(2)) if match.group(2) else 0
-                minutes = int(match.group(3)) if match.group(3) else 0
-                seconds = int(match.group(4)) if match.group(4) else 0
-
-                logger.info(f"⏱️ {username} works {hours}h {minutes}m {seconds}s")
-                db.insert_clocked_time(
-                    username=username,
-                    hours=hours,
-                    minutes=minutes,
-                    seconds=seconds,
-                    channel_id=CLOCK_CHANNEL,
-                    timestamp=message.created_at
-                )
-            else:
-                logger.warning(f"❌ Не удалось распарсить время из сообщения: {message.content}")
+        else:
+            logger.warning(f"❌ Не удалось распарсить время из сообщения: {message.content}")
 
     if channel_id in SALES_CHANNELS:
         match = re.findall(r'\d+', message.content.replace(' ', ''))
