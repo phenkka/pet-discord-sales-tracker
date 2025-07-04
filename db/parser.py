@@ -66,10 +66,11 @@ async def on_message(message):
             username = user.display_name
 
             match = re.search(
-                r"adding\s+(?:(\d+)\s+hours?,\s*)?(?:(\d+)\s+minutes?,\s*)?(?:(\d+)\s+seconds?)?",
+                r"@(\w+).*?adding\s+(?:(\d+)\s+hours?,\s*)?(?:(\d+)\s+minutes?,\s*)?(?:(\d+)\s+seconds?)?",
                 message.content
             )
 
+            logger.info(f"{match}")
             if match:
                 hours = int(match.group(1)) if match.group(1) else 0
                 minutes = int(match.group(2)) if match.group(2) else 0
